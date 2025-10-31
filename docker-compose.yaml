@@ -1,0 +1,44 @@
+services:
+  postgres_db:
+    restart: always
+    image: postgres:17
+    ports:
+      - '5432:5432'
+    networks:
+      - my_network
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=tenant_system
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  pgadmin:
+    restart: always 
+    image: dpage/pgadmin4
+    ports:
+      - '5050:80'
+    networks:
+      - my_network
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=user@domain.com
+      - PGADMIN_DEFAULT_PASSWORD=user@admin
+      - PGADMIN_CONFIG_SESSION_EXPIRATION_TIME= 3600
+      - SERVER_MODE=False
+      - APPLICATION_ROOT='/pgadmin'
+
+    depends_on:
+      - postgres_db
+
+networks:
+  my_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
