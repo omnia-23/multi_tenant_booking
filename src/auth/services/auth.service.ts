@@ -23,11 +23,13 @@ export class AuthService {
       user_id: user.id,
       email: user.email,
       role: user.role,
+      tenant_id: user.tenant_id,
     });
 
     const refreshToken = this.tokenService.createRefreshToken({
       user_id: user.id,
       email: user.email,
+      tenant_id: user.tenant_id,
     });
 
     const foundUser = await this.userService.findByEmail(user.email);

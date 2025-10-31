@@ -5,7 +5,7 @@ export interface User {
   email: string;
   userId: string;
   role: Role;
-  role_id?: string;
+  tenant_id?: string;
 }
 
 export const GetUser = createParamDecorator((data: keyof User | undefined, ctx: ExecutionContext): User | string => {

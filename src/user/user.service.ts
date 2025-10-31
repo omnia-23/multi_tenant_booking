@@ -43,8 +43,6 @@ export class UserService {
     return this.userRepository.findByEmail(email);
   }
 
-  
-
   async validateUserPassword(email: string, password: string) {
     const user = await this.findByEmail(email);
     if (user && bcrypt.compareSync(password, user.password)) {

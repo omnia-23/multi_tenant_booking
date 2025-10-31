@@ -3,4 +3,5 @@ export interface JwtPayload {
   email: string;
   type: 'access' | 'refresh';
   role: string;
+  tenant_id: string;
 }

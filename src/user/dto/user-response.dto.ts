@@ -18,6 +18,9 @@ export class UserResponseDto {
   role: Role;
 
   @Expose()
+  tenant_id: string;
+
+  @Expose()
   created_at: Date;
 
   @Expose()

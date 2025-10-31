@@ -1,8 +1,8 @@
 import { pgEnum, pgTable, uniqueIndex, uuid, varchar, text } from 'drizzle-orm/pg-core';
 import { timestamps } from 'src/database/database.utils';
 import { Role, Roles } from './enums/role.enum';
+import { tenants } from '@/tenant/tenant.schema';
 
-// Database enum
 export const userRolesEnum = pgEnum('user_role_enum', Roles);
 
 export const users = pgTable(
@@ -13,6 +13,7 @@ export const users = pgTable(
     email: varchar({ length: 255 }).notNull().unique(),
     password: varchar({ length: 255 }).notNull(),
     role: userRolesEnum().notNull().default(Role.User),
+    tenant_id: uuid().references(() => tenants.id),
     refresh_token: text(),
     ...timestamps,
   },
