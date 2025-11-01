@@ -2,14 +2,14 @@ import { getTableName, isTable } from 'drizzle-orm';
 import { PgTable } from 'drizzle-orm/pg-core';
 import * as userSchema from '../user/user.schema';
 import * as tenantSchema from '../tenant/tenant.schema';
-import * as spaceSchema from '../spaces/spaces.schema';
-import * as bookingSchema from '../bookings/bookings.schema';
+import * as spaceSchema from '../spaces/space.schema';
+import * as bookingSchema from '../booking/booking.schema';
 
 const schemas = {
   ...userSchema,
   ...tenantSchema,
   ...spaceSchema,
-  ...bookingSchema
+  ...bookingSchema,
 };
 
 /**

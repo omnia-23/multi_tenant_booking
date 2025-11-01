@@ -1,4 +1,4 @@
-import { spaces } from '@/spaces/spaces.schema';
+import { spaces } from '@/spaces/space.schema';
 import { tenants } from '@/tenant/tenant.schema';
 import { users } from '@/user/user.schema';
 import { pgTable, uuid, timestamp } from 'drizzle-orm/pg-core';
