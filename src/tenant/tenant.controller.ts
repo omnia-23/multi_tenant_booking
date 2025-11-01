@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
@@ -16,7 +16,7 @@ export class TenantController {
   }
 
   @Get()
-  findAll(query: PaginationQueryDto) {
+  findAll(@Query() query: PaginationQueryDto) {
     return this.tenantService.findAll(query);
   }
 
