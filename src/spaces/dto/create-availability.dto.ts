@@ -1,4 +1,4 @@
-import { IsUUID, IsInt, IsDateString, IsNotEmpty } from 'class-validator';
+import { IsUUID, IsInt, IsNotEmpty, Matches } from 'class-validator';
 
 export class CreateAvailabilityDto {
   @IsUUID()
@@ -10,11 +10,11 @@ export class CreateAvailabilityDto {
   @IsInt()
   weekday: number; // 0=Sunday .. 6=Saturday
 
-  @IsDateString()
   @IsNotEmpty()
+  @Matches(/^([0-1]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, { message: 'start_time must be in HH:mm or HH:mm:ss format' })
   start_time: string;
 
-  @IsDateString()
   @IsNotEmpty()
+  @Matches(/^([0-1]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, { message: 'end_time must be in HH:mm or HH:mm:ss format' })
   end_time: string;
 }

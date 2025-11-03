@@ -63,8 +63,6 @@ export class SpacesService {
   createAvailability(dto: CreateAvailabilityDto) {
     return this.repo.createAvailability({
       ...dto,
-      start_time: new Date(dto.start_time),
-      end_time: new Date(dto.end_time),
     });
   }
 
@@ -75,8 +73,6 @@ export class SpacesService {
   async updateAvailability(id: string, dto: UpdateAvailabilityDto) {
     return this.repo.updateAvailability(id, {
       ...dto,
-      start_time: new Date(dto.start_time),
-      end_time: new Date(dto.end_time),
     });
   }
 

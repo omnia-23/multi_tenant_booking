@@ -1,19 +1,22 @@
+import { Type } from 'class-transformer';
 import { IsDate, IsNotEmpty, IsUUID } from 'class-validator';
 
 export class CreateBookingDto {
   @IsUUID()
   @IsNotEmpty()
-  userId: string;
+  user_id: string;
 
   @IsUUID()
   @IsNotEmpty()
-  spaceId: string;
+  space_id: string;
 
   @IsDate()
+  @Type(() => Date)
   @IsNotEmpty()
-  startTime: Date;
+  start_time: Date;
 
   @IsDate()
+  @Type(() => Date)
   @IsNotEmpty()
-  endTime: Date;
+  end_time: Date;
 }

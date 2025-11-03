@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, Inject } from '@nestjs/common';
-import { eq, and, or, gte, lte } from 'drizzle-orm';
+import { eq, and, or, gte, lte, sql } from 'drizzle-orm';
 import schema from '../database/database.schema';
 import { DATABASE_CONNECTION } from '@/database/database-connection';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -10,36 +10,60 @@ export class BookingService {
   constructor(@Inject(DATABASE_CONNECTION) private readonly database: NodePgDatabase<typeof schema>) {}
 
   async createBooking(createBookingDto: CreateBookingDto) {
-    const { endTime, startTime, spaceId, userId } = createBookingDto;
+    const { end_time, space_id, start_time, user_id } = createBookingDto;
 
-    // Validate availability
-    const dayOfWeek = startTime.getDay();
+    // Convert input ISO strings → Date objects
+    const startTime = new Date(start_time);
+    const endTime = new Date(end_time);
 
+    // Derive weekday and total minutes since midnight (UTC)
+    const dayOfWeek = startTime.getUTCDay();
+    const bookingStartMinutes = startTime.getUTCHours() * 60 + startTime.getUTCMinutes();
+    const bookingEndMinutes = endTime.getUTCHours() * 60 + endTime.getUTCMinutes();
+    console.log({ bookingStartMinutes, bookingEndMinutes });
+    // 1️⃣ Find a matching availability for this weekday + time range
     const availability = await this.database.query.spaceAvailabilities.findFirst({
-      where: and(eq(schema.spaceAvailabilities.space_id, spaceId), eq(schema.spaceAvailabilities.weekday, dayOfWeek)),
+      where: and(
+        eq(schema.spaceAvailabilities.space_id, space_id),
+        eq(schema.spaceAvailabilities.weekday, dayOfWeek),
+        lte(
+          sql`EXTRACT(HOUR FROM ${schema.spaceAvailabilities.start_time}) * 60 + EXTRACT(MINUTE FROM ${schema.spaceAvailabilities.start_time})`,
+          bookingStartMinutes,
+        ),
+        gte(
+          sql`EXTRACT(HOUR FROM ${schema.spaceAvailabilities.end_time}) * 60 + EXTRACT(MINUTE FROM ${schema.spaceAvailabilities.end_time})`,
+          bookingEndMinutes,
+        ),
+      ),
     });
 
+    console.log({ availability });
+
     if (!availability) {
-      throw new BadRequestException('This space is not available on this day');
+      throw new BadRequestException('This space is not available on this day or time');
     }
 
-    // Step 2️⃣: Normalize availability to the same date as booking
-    const bookingDate = new Date(startTime);
+    // 2️⃣ Normalize availability times to the same booking date
+    const bookingDate = startTime;
+
+    const [availStartHour, availStartMinute] = availability.start_time.split(':').map(Number);
+    const [availEndHour, availEndMinute] = availability.end_time.split(':').map(Number);
 
     const availabilityStart = new Date(bookingDate);
-    availabilityStart.setHours(availability.start_time.getHours(), availability.start_time.getMinutes(), 0, 0);
+    availabilityStart.setUTCHours(availStartHour, availStartMinute, 0, 0);
 
     const availabilityEnd = new Date(bookingDate);
-    availabilityEnd.setHours(availability.end_time.getHours(), availability.end_time.getMinutes(), 0, 0);
+    availabilityEnd.setUTCHours(availEndHour, availEndMinute, 0, 0);
 
-    // Step 3️⃣: Ensure requested times are within availability
+    // 3️⃣ Ensure booking fits inside availability window
     if (startTime < availabilityStart || endTime > availabilityEnd) {
       throw new BadRequestException('Requested time is outside available hours');
     }
-    // Step 4️⃣: Prevent overlapping bookings for this space
+
+    // 4️⃣ Check overlapping bookings for the same space
     const overlappingBookings = await this.database.query.bookings.findMany({
       where: and(
-        eq(schema.bookings.space_id, spaceId),
+        eq(schema.bookings.space_id, space_id),
         or(
           and(gte(schema.bookings.start_at, startTime), lte(schema.bookings.start_at, endTime)),
           and(gte(schema.bookings.end_at, startTime), lte(schema.bookings.end_at, endTime)),
@@ -52,10 +76,10 @@ export class BookingService {
       throw new BadRequestException('This slot is already booked');
     }
 
-    // Step 5️⃣: Prevent user from double-booking
+    // 5️⃣ Check overlapping bookings for same user
     const userConflicts = await this.database.query.bookings.findMany({
       where: and(
-        eq(schema.bookings.user_id, userId),
+        eq(schema.bookings.user_id, user_id),
         or(
           and(gte(schema.bookings.start_at, startTime), lte(schema.bookings.start_at, endTime)),
           and(gte(schema.bookings.end_at, startTime), lte(schema.bookings.end_at, endTime)),
@@ -67,17 +91,15 @@ export class BookingService {
       throw new BadRequestException('You already have a booking at this time');
     }
 
-    // Step 6️⃣: Create booking
+    // 6️⃣ Create the booking record
     const [booking] = await this.database
       .insert(schema.bookings)
       .values({
-        user_id: userId,
-        space_id: spaceId,
+        user_id,
+        space_id,
         start_at: startTime,
         end_at: endTime,
         tenant_id: availability.tenant_id,
-        created_at: new Date(),
-        updated_at: new Date(),
       })
       .returning();
 

@@ -1,5 +1,6 @@
 import { tenants } from '@/tenant/tenant.schema';
-import { pgTable, uuid, varchar, boolean, integer, timestamp } from 'drizzle-orm/pg-core';
+import { time } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, boolean, integer } from 'drizzle-orm/pg-core';
 import { timestamps } from 'src/database/database.utils';
 
 // Spaces table
@@ -20,7 +21,7 @@ export const spaceAvailabilities = pgTable('space_availabilities', {
     .references(() => spaces.id)
     .notNull(),
   weekday: integer('weekday').notNull(), // weekly recurring: 0=Sunday .. 6=Saturday
-  start_time: timestamp('start_time').notNull(),
-  end_time: timestamp('end_time').notNull(),
+  start_time: time('start_time').notNull(),
+  end_time: time('end_time').notNull(),
   ...timestamps,
 });
