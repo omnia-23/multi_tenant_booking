@@ -10,7 +10,7 @@ export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
 
   @Post()
-  @AuthorizationDecorator()
+  @AuthorizationDecorator(['super_admin', 'admin'])
   create(@Body() createTenantDto: CreateTenantDto) {
     return this.tenantService.create(createTenantDto);
   }
@@ -26,13 +26,13 @@ export class TenantController {
   }
 
   @Patch(':id')
-  @AuthorizationDecorator()
+  @AuthorizationDecorator(['super_admin', 'admin'])
   update(@Param('id') id: string, @Body() updateTenantDto: UpdateTenantDto) {
     return this.tenantService.update(id, updateTenantDto);
   }
 
   @Delete(':id')
-  @AuthorizationDecorator()
+  @AuthorizationDecorator(['super_admin', 'admin'])
   remove(@Param('id') id: string) {
     return this.tenantService.remove(id);
   }

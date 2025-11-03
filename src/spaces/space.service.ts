@@ -1,17 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { SpaceRepository } from './repositories/space.repository';
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
 import { CreateAvailabilityDto } from './dto/create-availability.dto';
 import { UpdateAvailabilityDto } from './dto/update-availability.dto';
 import { startOfToday } from 'date-fns';
+import { User } from '@/common/decorators/get-user.decorator';
 
 @Injectable()
 export class SpacesService {
   constructor(private readonly repo: SpaceRepository) {}
 
   // Spaces
-  async createSpace(dto: CreateSpaceDto) {
+  async createSpace(dto: CreateSpaceDto, user: User) {
+    if (user.tenant_id !== dto.tenant_id) {
+      throw new ForbiddenException('not allow to add space');
+    }
+
     const space = await this.repo.createSpace({
       tenant_id: dto.tenant_id,
       name: dto.name,
@@ -60,7 +65,10 @@ export class SpacesService {
   }
 
   // Availabilities
-  createAvailability(dto: CreateAvailabilityDto) {
+  createAvailability(dto: CreateAvailabilityDto, user: User) {
+    if (user.tenant_id !== dto.tenant_id) {
+      throw new ForbiddenException('not allow to add space');
+    }
     return this.repo.createAvailability({
       ...dto,
     });
